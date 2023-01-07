@@ -1,0 +1,30 @@
+{
+  "name": "solid-hooks",
+  "version": "0.0.1",
+  "author": "Damian Tarnawski <gthetarnav@gmail.com>",
+  "license": "MIT",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite serve dev",
+    "build": "tsup"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "esbuild": "^0.16.14",
+    "esbuild-plugin-solid": "^0.4.2",
+    "tsup": "^6.5.0",
+    "typescript": "^4.9.4",
+    "unocss": "^0.48.0",
+    "vite": "^4.0.4",
+    "vite-plugin-solid": "^2.5.0"
+  },
+  "dependencies": {
+    "solid-js": "^1.6.8"
+  },
+  "packageManager": "pnpm@7.19.0",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
