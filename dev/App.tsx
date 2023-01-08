@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, untrack } from 'solid-js'
-import { useCallback, useId, useRef, useState } from '../src'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from '../src'
 
 const App: Component = () => {
   const [count, setCount] = createSignal(0)
@@ -28,12 +28,18 @@ const App: Component = () => {
     const multiplierValue = multiplier()
 
     const [count, setCount] = untrack(() => useState(() => 0))
+    const double = useMemo(() => count * 2, [count])
 
     const increment = useCallback(() => {
-      setCount(p => p + 1 * multiplierValue)
+      setCount(p => (console.log('prev', p), p + 1 * multiplierValue))
+      setCount(p => (console.log('prev', p), p + 1 * multiplierValue))
     }, [multiplierValue])
 
-    return { count, increment }
+    useEffect(() => {
+      console.log('effect', count)
+    }, [count])
+
+    return { count, increment, double }
   })
 
   return (
@@ -56,7 +62,7 @@ const App: Component = () => {
           M: {multiplier()}
         </button>
         <button class="btn" onClick={() => stateMemo().increment()}>
-          {stateMemo().count}
+          C: {stateMemo().count} D: {stateMemo().double}
         </button>
       </div>
     </div>

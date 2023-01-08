@@ -13,21 +13,26 @@ Hooks to implement:
 - [x] useState
 - [x] useRef
 - [x] useCallback
-- [ ] useMemo
-- [ ] useLayoutEffect
+- [x] useMemo
 - [ ] useEffect
+- [ ] useLayoutEffect
 - [ ] useReducer
 - [ ] useImperativeHandle
 - [ ] useDeferredValue
 - [ ] useSyncExternalStore
 - [ ] useEvent
 
-
-brb 22:00
-
 */
 
-import { createComputed, createRoot, createSignal, getOwner, onCleanup } from 'solid-js'
+import {
+  batch,
+  createComputed,
+  createRoot,
+  createSignal,
+  getOwner,
+  onCleanup,
+  runWithOwner,
+} from 'solid-js'
 import type { Computation, SignalState } from 'solid-js/types/reactive/signal'
 
 declare module 'solid-js' {
@@ -42,7 +47,7 @@ type HooksData = {
     signal: SignalState<unknown>
   }
   index: number
-  data: (RefData | StateData<any> | IdData | CallbackData<any>)[]
+  data: (RefData | StateData<any> | IdData | CallbackData<any> | MemoData<any> | EffectData)[]
   onCleanup: VoidFunction | undefined
 }
 
@@ -138,29 +143,6 @@ export function useRef<T>(initValue: T): { current: T } {
   return getHookData<RefData>(() => ({ current: initValue }))
 }
 
-export type StateSetter<T> = (value: T | ((prev: T) => T)) => void
-
-type StateData<T> = {
-  value: T
-  setter: StateSetter<T>
-}
-
-export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
-  const stateData = getHookData<StateData<T>>(hooksData => {
-    const obj: StateData<T> = {
-      value: typeof initValue === 'function' ? (initValue as () => T)() : initValue,
-      setter(newValue) {
-        obj.value =
-          typeof newValue === 'function' ? (newValue as (prev: T) => T)(obj.value) : newValue
-        hooksData.trigger.trigger()
-      },
-    }
-    return obj
-  })
-
-  return [stateData.value, stateData.setter]
-}
-
 type CallbackData<T extends (...args: any[]) => any> = {
   callback: T
   deps: any[]
@@ -179,4 +161,93 @@ export function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[
   }
 
   return data.callback
+}
+
+type MemoData<T> = {
+  value: T
+  deps: any[]
+}
+
+export function useMemo<T>(calculateValue: () => T, deps: any[]): T {
+  let init = false
+  const data = getHookData<MemoData<T>>(() => {
+    init = true
+    return { value: calculateValue(), deps }
+  })
+
+  if (!init && !compareDeps(data.deps, deps)) {
+    data.value = calculateValue()
+    data.deps = deps
+  }
+
+  return data.value
+}
+
+// TODO make it into a set?
+// TODO fix prev values
+// TODO run the first update immediately and the rest in a mt
+const triggerQueue: VoidFunction[] = []
+
+function runTriggerQueue() {
+  if (triggerQueue.length === 0) {
+    queueMicrotask(() => {
+      const queue = triggerQueue.slice()
+      triggerQueue.length = 0
+      batch(() => queue.forEach(fn => fn()))
+    })
+  }
+}
+
+export type StateSetter<T> = (value: T | ((prev: T) => T)) => void
+
+type StateData<T> = {
+  value: T
+  setter: StateSetter<T>
+}
+
+export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
+  const stateData = getHookData<StateData<T>>(hooksData => {
+    const obj: StateData<T> = {
+      value: typeof initValue === 'function' ? (initValue as () => T)() : initValue,
+      setter(newValue) {
+        const calculated =
+          typeof newValue === 'function' ? (newValue as (prev: T) => T)(obj.value) : newValue
+        runTriggerQueue()
+        triggerQueue.push(() => {
+          obj.value = calculated
+          hooksData.trigger.trigger()
+        })
+      },
+    }
+    return obj
+  })
+
+  return [stateData.value, stateData.setter]
+}
+
+type EffectData = {
+  deps: any[]
+}
+
+// TODO the first effect should be executed before mt
+// ? should effects be pushed to end of the queue? (after all updates)
+
+export function useEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
+  let init = false
+  const data = getHookData<EffectData>(() => {
+    init = true
+    return { deps }
+  })
+
+  if (init || !compareDeps(data.deps, deps)) {
+    const owner = getOwner() as Computation<unknown>
+    data.deps = deps
+    runTriggerQueue()
+    triggerQueue.push(() =>
+      runWithOwner(owner, () => {
+        const cleanup = effect()
+        if (cleanup) onCleanup(cleanup)
+      }),
+    )
+  }
 }
