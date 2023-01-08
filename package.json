@@ -1,30 +1,114 @@
 {
   "name": "solid-hooks",
   "version": "0.0.1",
-  "author": "Damian Tarnawski <gthetarnav@gmail.com>",
   "license": "MIT",
-  "description": "",
-  "main": "index.js",
+  "author": "Damian Tarnawski <gthetarnav@gmail.com>",
+  "contributors": [],
+  "homepage": "https://github.com/thetarnav/solid-hooks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thetarnav/solid-hooks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thetarnav/solid-hooks/issues"
+  },
+  "keywords": [
+    "solid",
+    "solid-js",
+    "hooks",
+    "reactivity",
+    "react"
+  ],
+  "private": false,
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/server.cjs",
+  "module": "./dist/server.js",
+  "browser": {
+    "./dist/server.cjs": "./dist/index.cjs",
+    "./dist/server.js": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "worker": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": "./dist/server.cjs"
+    },
+    "browser": {
+      "development": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/dev.js"
+        },
+        "require": "./dist/dev.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": "./dist/index.cjs"
+    },
+    "deno": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": "./dist/server.cjs"
+    },
+    "node": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": "./dist/server.cjs"
+    },
+    "development": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/dev.js"
+      },
+      "require": "./dist/dev.cjs"
+    },
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": "./dist/index.cjs"
+  },
   "scripts": {
     "dev": "vite serve dev",
     "build": "tsup"
   },
-  "keywords": [],
   "devDependencies": {
     "@types/node": "^18.11.18",
-    "esbuild": "^0.16.14",
-    "esbuild-plugin-solid": "^0.4.2",
+    "@typescript-eslint/eslint-plugin": "^5.48.0",
+    "@typescript-eslint/parser": "^5.48.0",
+    "esbuild": "^0.16.15",
+    "eslint": "^8.31.0",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "prettier": "^2.8.2",
+    "prettier-plugin-organize-imports": "^3.2.1",
     "tsup": "^6.5.0",
     "typescript": "^4.9.4",
-    "unocss": "^0.48.0",
+    "unocss": "^0.48.3",
     "vite": "^4.0.4",
-    "vite-plugin-solid": "^2.5.0"
+    "vite-plugin-solid": "^2.5.0",
+    "vitest": "^0.26.3"
   },
   "dependencies": {
     "solid-js": "^1.6.8"
   },
-  "packageManager": "pnpm@7.19.0",
+  "packageManager": "pnpm@7.20.0",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   }
 }

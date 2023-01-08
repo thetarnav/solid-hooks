@@ -1,14 +1,7 @@
-import {
-  createComputed,
-  createRoot,
-  createSignal,
-  getListener,
-  getOwner,
-  onCleanup,
-} from "solid-js"
-import type { Computation, SignalState } from "solid-js/types/reactive/signal"
+import { createComputed, createRoot, createSignal, getOwner, onCleanup } from 'solid-js'
+import type { Computation, SignalState } from 'solid-js/types/reactive/signal'
 
-declare module "solid-js" {
+declare module 'solid-js' {
   interface Owner {
     hooksData?: HooksData
   }
@@ -26,10 +19,10 @@ type HooksData = {
 
 type RefData = { current: any }
 
-function getHookData<T extends HooksData["data"][number]>(factory: (hooksData: HooksData) => T): T {
+function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: HooksData) => T): T {
   const owner = getOwner() as Computation<unknown>
   if (!owner) {
-    throw new Error("hooks can only be used inside a computation.")
+    throw new Error(process.env.DEV ? 'hooks can only be used inside a computation.' : '')
   }
 
   const hooksData =
@@ -46,9 +39,9 @@ function getHookData<T extends HooksData["data"][number]>(factory: (hooksData: H
           if (!init) return
           init = false
           trackTrigger()
-          const owner = getOwner() as Computation<unknown>
-          signal = owner.sources![0]!
-          owner.sources = owner.sourceSlots = signal.observerSlots = signal.observers = null
+          const cOwner = getOwner() as Computation<unknown>
+          signal = cOwner.sources![0]!
+          cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
         })
       })
 
@@ -65,7 +58,7 @@ function getHookData<T extends HooksData["data"][number]>(factory: (hooksData: H
       (hooksData.onCleanup = () => {
         hooksData.index = 0
         hooksData.onCleanup = undefined
-      })
+      }),
     )
 
     const signal = hooksData.trigger.signal
@@ -112,10 +105,10 @@ type StateData<T> = {
 export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
   const stateData = getHookData<StateData<T>>(hooksData => {
     const obj: StateData<T> = {
-      value: typeof initValue === "function" ? (initValue as () => T)() : initValue,
+      value: typeof initValue === 'function' ? (initValue as () => T)() : initValue,
       setter(newValue) {
         obj.value =
-          typeof newValue === "function" ? (newValue as (prev: T) => T)(obj.value) : newValue
+          typeof newValue === 'function' ? (newValue as (prev: T) => T)(obj.value) : newValue
         hooksData.trigger.trigger()
       },
     }
