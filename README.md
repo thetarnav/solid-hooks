@@ -1,2 +1,3 @@
-# solid-hooks
+# @thetarnav/solid-hooks
+
 React hooks in SolidJS
