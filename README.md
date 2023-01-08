@@ -1,3 +1,5 @@
 # solid-react-hooks
 
-React hooks in SolidJS
+A library we don't deserve, but also never wanted.
+
+React hooks API in SolidJS.

@@ -87,8 +87,10 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
 
 type IdData = string
 
+const getNewId = () => Math.random().toString(36).substring(2, 9)
+
 export function useId(): string {
-  return getHookData<IdData>(() => Math.random().toString(36).substring(2, 9))
+  return getHookData<IdData>(getNewId)
 }
 
 export function useRef<T>(initValue: T): { current: T } {
