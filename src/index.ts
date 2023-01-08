@@ -1,3 +1,32 @@
+/*
+
+Don't do this at home, kids.
+
+This is a proof of concept of how to implement hooks in Solid.
+
+It's not meant to be used in production, but rather to show how it could be done.
+
+It's not even complete, it's just a few hooks to show how it could work.
+
+Hooks to implement:
+- [x] useId
+- [x] useState
+- [x] useRef
+- [x] useCallback
+- [ ] useMemo
+- [ ] useLayoutEffect
+- [ ] useEffect
+- [ ] useReducer
+- [ ] useImperativeHandle
+- [ ] useDeferredValue
+- [ ] useSyncExternalStore
+- [ ] useEvent
+
+
+brb 22:00
+
+*/
+
 import { createComputed, createRoot, createSignal, getOwner, onCleanup } from 'solid-js'
 import type { Computation, SignalState } from 'solid-js/types/reactive/signal'
 
@@ -13,7 +42,7 @@ type HooksData = {
     signal: SignalState<unknown>
   }
   index: number
-  data: (RefData | StateData<any> | IdData)[]
+  data: (RefData | StateData<any> | IdData | CallbackData<any>)[]
   onCleanup: VoidFunction | undefined
 }
 
@@ -85,6 +114,18 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
   return hookData
 }
 
+function compareDeps(prevDeps: any[], deps: any[]): boolean {
+  if (prevDeps.length !== deps.length) {
+    // eslint-disable-next-line no-console
+    process.env.DEV && console.warn('deps length changed')
+    return false
+  }
+  for (let i = 0; i < deps.length; i++) {
+    if (!Object.is(prevDeps[i], deps[i])) return false
+  }
+  return true
+}
+
 type IdData = string
 
 const getNewId = () => Math.random().toString(36).substring(2, 9)
@@ -118,4 +159,24 @@ export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
   })
 
   return [stateData.value, stateData.setter]
+}
+
+type CallbackData<T extends (...args: any[]) => any> = {
+  callback: T
+  deps: any[]
+}
+
+export function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[]): T {
+  let init = false
+  const data = getHookData<CallbackData<T>>(() => {
+    init = true
+    return { callback: fn, deps }
+  })
+
+  if (!init && !compareDeps(data.deps, deps)) {
+    data.callback = fn
+    data.deps = deps
+  }
+
+  return data.callback
 }

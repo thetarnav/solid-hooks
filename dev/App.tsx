@@ -1,8 +1,9 @@
-import { Component, createMemo, createSignal, untrack } from "solid-js"
-import { useId, useRef, useState } from "../src"
+import { Component, createMemo, createSignal, untrack } from 'solid-js'
+import { useCallback, useId, useRef, useState } from '../src'
 
 const App: Component = () => {
   const [count, setCount] = createSignal(0)
+  const [multiplier, setMultiplier] = createSignal(1)
 
   const increment = () => setCount(count() + 1)
 
@@ -21,31 +22,40 @@ const App: Component = () => {
 
   const stateMemo = createMemo(() => {
     const ref = useRef(`${i++}`)
-
     ref.current += ref.current[0]
+    console.log(ref.current)
 
-    console.log(ref.current, count())
+    const multiplierValue = multiplier()
 
-    return untrack(() => {
-      const [count, setCount] = useState(() => {
-        console.log("useState called")
-        return 0
-      })
+    const [count, setCount] = untrack(() => useState(() => 0))
 
-      return { count, setCount }
-    })
+    const increment = useCallback(() => {
+      setCount(p => p + 1 * multiplierValue)
+    }, [multiplierValue])
+
+    return { count, increment }
   })
 
   return (
     <div class="p-24 box-border w-full min-h-screen flex flex-col justify-center items-center space-y-4 bg-gray-800 text-white">
       <div class="wrapper-v">
-        <h4>{"Counter component"}</h4>
+        <h4>{'Counter component'}</h4>
         <p class="caption">useRef</p>
         <button class="btn" onClick={increment}>
           {memo()}
         </button>
         <p class="caption">useState</p>
-        <button class="btn" onClick={() => stateMemo().setCount(p => ++p)}>
+        <button
+          class="btn"
+          onClick={e => setMultiplier(p => ++p)}
+          onContextMenu={e => {
+            e.preventDefault()
+            setMultiplier(p => --p)
+          }}
+        >
+          M: {multiplier()}
+        </button>
+        <button class="btn" onClick={() => stateMemo().increment()}>
           {stateMemo().count}
         </button>
       </div>
