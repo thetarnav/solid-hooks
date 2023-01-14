@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, untrack } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, untrack } from 'solid-js'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from '../src'
 
 const App: Component = () => {
@@ -40,6 +40,15 @@ const App: Component = () => {
     }, [count])
 
     return { count, increment, double }
+  })
+
+  createEffect(() => {
+    // sources
+    const countValue = count()
+    const init = useRef(true)
+    if (init.current) return (init.current = false)
+    // effect
+    console.log('3 effect', countValue)
   })
 
   return (

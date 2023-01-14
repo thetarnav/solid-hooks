@@ -65,18 +65,25 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
       let signal!: SignalState<unknown>
       let trigger!: VoidFunction
 
-      // TODO: this root needs to be cleaned up
-      createRoot(() => {
-        const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
-        trigger = _trigger
-        let init = true
-        createComputed(() => {
-          if (!init) return
-          init = false
-          trackTrigger()
-          const cOwner = getOwner() as Computation<unknown>
-          signal = cOwner.sources![0]!
-          cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
+      runWithOwner(null!, () => {
+        createRoot(dispose => {
+          const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
+          trigger = _trigger
+          let init = true
+          createComputed(() => {
+            if (!init) return
+            init = false
+            trackTrigger()
+            const cOwner = getOwner() as Computation<unknown>
+            signal = cOwner.sources![0]!
+            cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
+          })
+
+          // dispose the root when the owner is disposed
+          if (owner.owner) {
+            if (owner.owner.cleanups) owner.owner.cleanups.push(dispose)
+            else owner.owner.cleanups = [dispose]
+          }
         })
       })
 
