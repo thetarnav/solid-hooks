@@ -2,7 +2,7 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "no-only-tests"],
-  "ignorePatterns": ["node_modules", "dist", "/dev"],
+  "ignorePatterns": ["node_modules", "dist", "/dev", "/tsup.config.ts"],
   "parserOptions": {
     "project": "./tsconfig.json",
     "tsconfigRootDir": ".",

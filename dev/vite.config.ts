@@ -1,18 +1,14 @@
+import devtools from 'solid-devtools/vite'
 import unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
-// import civetPlugin from "vite-plugin-civet"
 
 export default defineConfig({
   server: {
     port: 3000,
   },
   plugins: [
-    // civetPlugin({
-    //   stripTypes: false,
-    //   outputExtension: "tsx",
-    //   outputTransformerPlugin: "solid",
-    // }),
+    devtools({ autoname: true }),
     solid(),
     unocss({
       shortcuts: {

@@ -35,7 +35,7 @@ import {
 } from 'solid-js'
 import type { Computation, SignalState } from 'solid-js/types/reactive/signal'
 
-declare module 'solid-js' {
+declare module 'solid-js/types/reactive/signal' {
   interface Owner {
     hooksData?: HooksData
   }
@@ -65,6 +65,7 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
       let signal!: SignalState<unknown>
       let trigger!: VoidFunction
 
+      // TODO: this root needs to be cleaned up
       createRoot(() => {
         const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
         trigger = _trigger
