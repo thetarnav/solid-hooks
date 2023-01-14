@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, untrack } from 'solid-js'
+import { Component, createMemo, createSignal, untrack } from 'solid-js'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from '../src'
 
 const App: Component = () => {
@@ -15,7 +15,9 @@ const App: Component = () => {
 
     ref.current += ref.current[0]
 
-    console.log(ref.current, count(), id)
+    const [s, setS] = useState(0)
+
+    // console.log(ref.current, count(), id)
 
     return count()
   })
@@ -23,18 +25,21 @@ const App: Component = () => {
   const stateMemo = createMemo(() => {
     const ref = useRef(`${i++}`)
     ref.current += ref.current[0]
-    console.log(ref.current)
+    // console.log(ref.current)
 
     const multiplierValue = multiplier()
 
     const [count, setCount] = untrack(() => useState(() => 0))
+    console.log('count', count)
     const double = useMemo(() => count * 2, [count])
 
     const increment = useCallback(() => {
-      setCount(p => (console.log('prev', p), p + 1 * multiplierValue))
-      setCount(p => (console.log('prev', p), p + 1 * multiplierValue))
+      setCount(p => p + 1 * multiplierValue)
     }, [multiplierValue])
 
+    queueMicrotask(() => {
+      console.log('microtask', count)
+    })
     useEffect(() => {
       console.log('effect', count)
     }, [count])
@@ -42,14 +47,14 @@ const App: Component = () => {
     return { count, increment, double }
   })
 
-  createEffect(() => {
-    // sources
-    const countValue = count()
-    const init = useRef(true)
-    if (init.current) return (init.current = false)
-    // effect
-    console.log('3 effect', countValue)
-  })
+  // createEffect(() => {
+  //   // sources
+  //   const countValue = count()
+  //   const init = useRef(true)
+  //   if (init.current) return (init.current = false)
+  //   // effect
+  //   console.log('3 effect', countValue)
+  // })
 
   return (
     <div class="p-24 box-border w-full min-h-screen flex flex-col justify-center items-center space-y-4 bg-gray-800 text-white">

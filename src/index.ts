@@ -43,6 +43,7 @@ declare module 'solid-js/types/reactive/signal' {
 
 type HooksData = {
   trigger: {
+    updated: boolean
     trigger: VoidFunction
     signal: SignalState<unknown>
   }
@@ -91,7 +92,7 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
         index: 0,
         data: [],
         onCleanup: undefined,
-        trigger: { signal, trigger },
+        trigger: { signal, trigger, updated: false },
       }
     })())
 
@@ -191,16 +192,14 @@ export function useMemo<T>(calculateValue: () => T, deps: any[]): T {
   return data.value
 }
 
-// TODO make it into a set?
-// TODO fix prev values
-// TODO run the first update immediately and the rest in a mt
-const triggerQueue: VoidFunction[] = []
+// ? make it into a set?
+const TriggerQueue: VoidFunction[] = []
 
 function runTriggerQueue() {
-  if (triggerQueue.length === 0) {
+  if (TriggerQueue.length === 0) {
     queueMicrotask(() => {
-      const queue = triggerQueue.slice()
-      triggerQueue.length = 0
+      const queue = TriggerQueue.slice()
+      TriggerQueue.length = 0
       batch(() => queue.forEach(fn => fn()))
     })
   }
@@ -213,18 +212,27 @@ type StateData<T> = {
   setter: StateSetter<T>
 }
 
+const getNextValue = <T>(newValue: T | ((prev: T) => T), prevValue: T) =>
+  typeof newValue === 'function' ? (newValue as (prev: T) => T)(prevValue) : newValue
+
 export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
   const stateData = getHookData<StateData<T>>(hooksData => {
     const obj: StateData<T> = {
       value: typeof initValue === 'function' ? (initValue as () => T)() : initValue,
       setter(newValue) {
-        const calculated =
-          typeof newValue === 'function' ? (newValue as (prev: T) => T)(obj.value) : newValue
-        runTriggerQueue()
-        triggerQueue.push(() => {
-          obj.value = calculated
-          hooksData.trigger.trigger()
-        })
+        if (!hooksData.trigger.updated) {
+          obj.value = getNextValue(newValue, obj.value)
+          hooksData.trigger.updated = true
+          runTriggerQueue()
+          TriggerQueue.push(() => {
+            hooksData.trigger.trigger()
+            hooksData.trigger.updated = false
+          })
+        } else {
+          TriggerQueue.push(() => {
+            obj.value = getNextValue(newValue, obj.value)
+          })
+        }
       },
     }
     return obj
@@ -251,7 +259,7 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps: a
     const owner = getOwner() as Computation<unknown>
     data.deps = deps
     runTriggerQueue()
-    triggerQueue.push(() =>
+    TriggerQueue.push(() =>
       runWithOwner(owner, () => {
         const cleanup = effect()
         if (cleanup) onCleanup(cleanup)
