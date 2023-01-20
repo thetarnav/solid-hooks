@@ -39,10 +39,16 @@ const App: Component = () => {
 
     useEffect(() => {
       console.log('effect', count, el.current?.innerText)
+      return () => {
+        console.log("cleanup 'effect'")
+      }
     }, [count])
 
     useLayoutEffect(() => {
       console.log('layout effect', count, el.current?.innerText)
+      return () => {
+        console.log('cleanup layout effect')
+      }
     }, [count])
 
     return { count, increment, double, el }

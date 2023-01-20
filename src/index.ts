@@ -44,6 +44,7 @@ declare module 'solid-js/types/reactive/signal' {
 }
 
 type HooksData = {
+  owner: Computation<unknown>
   trigger: {
     updated: boolean
     trigger: VoidFunction
@@ -52,6 +53,7 @@ type HooksData = {
   index: number
   data: (RefData | StateData<any> | IdData | CallbackData<any> | MemoData<any> | EffectData)[]
   onCleanup: VoidFunction | undefined
+  onDispose: VoidFunction[]
 }
 
 type RefData = { current: any }
@@ -83,11 +85,24 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
         })
       })
 
+      // Cleanups returned from thew effect and layoutEffect are called when the component is unmounted
+      const onDisposeList: VoidFunction[] = []
+      const parent = owner.owner
+      if (parent) {
+        const onDispose = () => {
+          for (const dispose of onDisposeList) dispose()
+        }
+        if (parent.cleanups) parent.cleanups.push(onDispose)
+        else parent.cleanups = [onDispose]
+      }
+
       return {
+        owner,
         index: 0,
         data: [],
         onCleanup: undefined,
         trigger: { signal, trigger, updated: false },
+        onDispose: onDisposeList,
       }
     })())
 
@@ -266,43 +281,51 @@ function pushEffectQueue(fn: VoidFunction) {
 
 type EffectData = {
   deps: any[]
+  cleanup?: VoidFunction
+  run: VoidFunction
 }
 
 export function useEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
   let init = false
-  const data = getHookData<EffectData>(() => {
+  const data = getHookData<EffectData>(hooksData => {
     init = true
-    return { deps }
+    return {
+      deps,
+      run() {
+        runWithOwner(hooksData.owner, () => {
+          data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
+          const cleanup = effect()
+          if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
+        })
+      },
+    }
   })
 
   if (init || !compareDeps(data.deps, deps)) {
-    const owner = getOwner() as Computation<unknown>
     data.deps = deps
     runTriggerQueue()
-    TriggerQueue.push(() =>
-      runWithOwner(owner, () => {
-        const cleanup = effect()
-        if (cleanup) onCleanup(cleanup)
-      }),
-    )
+    TriggerQueue.push(data.run)
   }
 }
 
 export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
   let init = false
-  const data = getHookData<EffectData>(() => {
+  const data = getHookData<EffectData>(hooksData => {
     init = true
-    return { deps }
+    return {
+      deps,
+      run() {
+        runWithOwner(hooksData.owner, () => {
+          data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
+          const cleanup = effect()
+          if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
+        })
+      },
+    }
   })
 
   if (init || !compareDeps(data.deps, deps)) {
-    const owner = getOwner() as Computation<unknown>
     data.deps = deps
-    pushEffectQueue(() =>
-      runWithOwner(owner, () => {
-        const cleanup = effect()
-        if (cleanup) onCleanup(cleanup)
-      }),
-    )
+    pushEffectQueue(data.run)
   }
 }
