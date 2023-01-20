@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, untrack } from 'solid-js'
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from '../src'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from '../src'
 
 const App: Component = () => {
   const [count, setCount] = createSignal(0)
@@ -15,14 +15,14 @@ const App: Component = () => {
 
     ref.current += ref.current[0]
 
-    const [s, setS] = useState(0)
-
-    // console.log(ref.current, count(), id)
+    console.log(ref.current, count(), id)
 
     return count()
   })
 
   const stateMemo = createMemo(() => {
+    const el = useRef<HTMLElement | null>(null)
+
     const ref = useRef(`${i++}`)
     ref.current += ref.current[0]
     // console.log(ref.current)
@@ -37,14 +37,15 @@ const App: Component = () => {
       setCount(p => p + 1 * multiplierValue)
     }, [multiplierValue])
 
-    queueMicrotask(() => {
-      console.log('microtask', count)
-    })
     useEffect(() => {
-      console.log('effect', count)
+      console.log('effect', count, el.current?.innerText)
     }, [count])
 
-    return { count, increment, double }
+    useLayoutEffect(() => {
+      console.log('layout effect', count, el.current?.innerText)
+    }, [count])
+
+    return { count, increment, double, el }
   })
 
   // createEffect(() => {
@@ -75,7 +76,11 @@ const App: Component = () => {
         >
           M: {multiplier()}
         </button>
-        <button class="btn" onClick={() => stateMemo().increment()}>
+        <button
+          class="btn"
+          onClick={() => stateMemo().increment()}
+          ref={el => (stateMemo().el.current = el)}
+        >
           C: {stateMemo().count} D: {stateMemo().double}
         </button>
       </div>

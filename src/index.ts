@@ -10,12 +10,13 @@ It's not even complete, it's just a few hooks to show how it could work.
 
 Hooks to implement:
 - [x] useId
-- [x] useState
 - [x] useRef
 - [x] useCallback
+- [x] useState
+  - [ ] add only if listener is present
 - [x] useMemo
-- [ ] useEffect
-- [ ] useLayoutEffect
+- [x] useEffect
+- [x] useLayoutEffect
 - [ ] useReducer
 - [ ] useImperativeHandle
 - [ ] useDeferredValue
@@ -27,13 +28,14 @@ Hooks to implement:
 import {
   batch,
   createComputed,
+  createEffect,
   createRoot,
   createSignal,
   getOwner,
   onCleanup,
   runWithOwner,
 } from 'solid-js'
-import type { Computation, SignalState } from 'solid-js/types/reactive/signal'
+import { Computation, SignalState } from 'solid-js/types/reactive/signal'
 
 declare module 'solid-js/types/reactive/signal' {
   interface Owner {
@@ -66,25 +68,18 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
       let signal!: SignalState<unknown>
       let trigger!: VoidFunction
 
-      runWithOwner(null!, () => {
-        createRoot(dispose => {
-          const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
-          trigger = _trigger
-          let init = true
-          createComputed(() => {
-            if (!init) return
-            init = false
-            trackTrigger()
-            const cOwner = getOwner() as Computation<unknown>
-            signal = cOwner.sources![0]!
-            cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
-          })
-
-          // dispose the root when the owner is disposed
-          if (owner.owner) {
-            if (owner.owner.cleanups) owner.owner.cleanups.push(dispose)
-            else owner.owner.cleanups = [dispose]
-          }
+      createRoot(dispose => {
+        const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
+        trigger = _trigger
+        let init = true
+        createComputed(() => {
+          if (!init) return
+          init = false
+          trackTrigger()
+          const cOwner = getOwner() as Computation<unknown>
+          signal = cOwner.sources![0]!
+          cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
+          dispose()
         })
       })
 
@@ -241,12 +236,37 @@ export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
   return [stateData.value, stateData.setter]
 }
 
+const EffectQueue: VoidFunction[] = []
+
+const [trackEffectQueueSignal, triggerEffectQueue] = createSignal(
+  void 0,
+  process.env.DEV ? { name: 'effectQueue', equals: false } : { equals: false },
+)
+
+createRoot(() => {
+  let init = true
+  createEffect(
+    () => {
+      trackEffectQueueSignal()
+      if (init) return (init = false)
+
+      const queue = EffectQueue.slice()
+      EffectQueue.length = 0
+
+      queue.forEach(fn => fn())
+    },
+    void 0,
+    process.env.DEV ? { name: 'effectQueue' } : void 0,
+  )
+})
+
+function pushEffectQueue(fn: VoidFunction) {
+  EffectQueue.push(fn) === 1 && triggerEffectQueue()
+}
+
 type EffectData = {
   deps: any[]
 }
-
-// TODO the first effect should be executed before mt
-// ? should effects be pushed to end of the queue? (after all updates)
 
 export function useEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
   let init = false
@@ -260,6 +280,25 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps: a
     data.deps = deps
     runTriggerQueue()
     TriggerQueue.push(() =>
+      runWithOwner(owner, () => {
+        const cleanup = effect()
+        if (cleanup) onCleanup(cleanup)
+      }),
+    )
+  }
+}
+
+export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
+  let init = false
+  const data = getHookData<EffectData>(() => {
+    init = true
+    return { deps }
+  })
+
+  if (init || !compareDeps(data.deps, deps)) {
+    const owner = getOwner() as Computation<unknown>
+    data.deps = deps
+    pushEffectQueue(() =>
       runWithOwner(owner, () => {
         const cleanup = effect()
         if (cleanup) onCleanup(cleanup)
