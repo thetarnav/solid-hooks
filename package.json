@@ -87,7 +87,8 @@
   "typesVersions": {},
   "scripts": {
     "dev": "vite serve dev",
-    "build": "tsup"
+    "build": "tsup",
+    "prepublish": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
