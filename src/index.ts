@@ -282,7 +282,7 @@ function pushEffectQueue(fn: VoidFunction) {
 type EffectData = {
   deps: any[]
   cleanup?: VoidFunction
-  run: VoidFunction
+  run: (fn: () => void | undefined | VoidFunction) => void
 }
 
 export function useEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
@@ -291,10 +291,10 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps: a
     init = true
     return {
       deps,
-      run() {
+      run(fn) {
         runWithOwner(hooksData.owner, () => {
           data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
-          const cleanup = effect()
+          const cleanup = fn()
           if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
         })
       },
@@ -304,7 +304,7 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps: a
   if (init || !compareDeps(data.deps, deps)) {
     data.deps = deps
     runTriggerQueue()
-    TriggerQueue.push(data.run)
+    TriggerQueue.push(() => data.run(effect))
   }
 }
 
@@ -314,10 +314,10 @@ export function useLayoutEffect(effect: () => void | undefined | VoidFunction, d
     init = true
     return {
       deps,
-      run() {
+      run(fn) {
         runWithOwner(hooksData.owner, () => {
           data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
-          const cleanup = effect()
+          const cleanup = fn()
           if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
         })
       },
@@ -326,6 +326,6 @@ export function useLayoutEffect(effect: () => void | undefined | VoidFunction, d
 
   if (init || !compareDeps(data.deps, deps)) {
     data.deps = deps
-    pushEffectQueue(data.run)
+    pushEffectQueue(() => data.run(effect))
   }
 }

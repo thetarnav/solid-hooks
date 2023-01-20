@@ -1,6 +1,41 @@
 import { Component, createMemo, createSignal, untrack } from 'solid-js'
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from '../src'
 
+const Counter = () => {
+  const count = createMemo(() => {
+    const n = useRef(0)
+    console.log('n', n.current++)
+
+    const [count, setCount] = useState(0)
+    console.log('-', count)
+    const savedCallback = useRef(() => {})
+
+    function callback() {
+      console.log(n.current, 'update', count + 1)
+      setCount(count + 1)
+    }
+
+    useEffect(() => {
+      console.log(n.current, 'effect 1', count)
+      savedCallback.current = callback
+    }, [{}])
+
+    useEffect(() => {
+      console.log('2')
+      function tick() {
+        savedCallback.current()
+      }
+
+      let id = setInterval(tick, 1000)
+      return () => clearInterval(id)
+    }, [])
+
+    return count
+  })
+
+  return <h1>Count {count()}</h1>
+}
+
 const App: Component = () => {
   const [count, setCount] = createSignal(0)
   const [multiplier, setMultiplier] = createSignal(1)
@@ -89,6 +124,7 @@ const App: Component = () => {
         >
           C: {stateMemo().count} D: {stateMemo().double}
         </button>
+        <Counter />
       </div>
     </div>
   )
