@@ -34,7 +34,7 @@ const App: Component = () => {
 
 ### Complete react counter
 
-https://playground.solidjs.com/anonymous/14789db6-0263-468e-b65f-19efec702fd1
+https://playground.solidjs.com/anonymous/0fbea53c-cdb3-48c6-acbf-22cfb83b62c7
 
 ```ts
 const count = createMemo(() => {
