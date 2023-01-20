@@ -8,7 +8,7 @@ const Counter = () => {
 
     const [count, setCount] = useState(0)
     console.log('-', count)
-    const savedCallback = useRef(() => {})
+    const savedCallback = useRef<VoidFunction>()
 
     function callback() {
       console.log(n.current, 'update', count + 1)
@@ -23,7 +23,7 @@ const Counter = () => {
     useEffect(() => {
       console.log('2')
       function tick() {
-        savedCallback.current()
+        savedCallback.current!()
       }
 
       let id = setInterval(tick, 1000)
