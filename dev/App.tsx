@@ -18,7 +18,7 @@ const Counter = () => {
     useEffect(() => {
       console.log(n.current, 'effect 1', count)
       savedCallback.current = callback
-    }, [{}])
+    })
 
     useEffect(() => {
       console.log('2')

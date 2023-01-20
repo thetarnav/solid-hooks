@@ -138,14 +138,15 @@ function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: H
   return hookData
 }
 
-function compareDeps(prevDeps: any[], deps: any[]): boolean {
-  if (prevDeps.length !== deps.length) {
+function compareDeps(prevDeps?: any[], deps?: any[]): boolean {
+  if (!prevDeps) return false
+  if (prevDeps.length !== deps!.length) {
     // eslint-disable-next-line no-console
     process.env.DEV && console.warn('deps length changed')
     return false
   }
-  for (let i = 0; i < deps.length; i++) {
-    if (!Object.is(prevDeps[i], deps[i])) return false
+  for (let i = 0; i < deps!.length; i++) {
+    if (!Object.is(prevDeps[i], deps![i])) return false
   }
   return true
 }
@@ -164,10 +165,10 @@ export function useRef<T>(initValue: T): { current: T } {
 
 type CallbackData<T extends (...args: any[]) => any> = {
   callback: T
-  deps: any[]
+  deps?: any[]
 }
 
-export function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[]): T {
+export function useCallback<T extends (...args: any[]) => any>(fn: T, deps?: any[]): T {
   let init = false
   const data = getHookData<CallbackData<T>>(() => {
     init = true
@@ -184,10 +185,10 @@ export function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[
 
 type MemoData<T> = {
   value: T
-  deps: any[]
+  deps?: any[]
 }
 
-export function useMemo<T>(calculateValue: () => T, deps: any[]): T {
+export function useMemo<T>(calculateValue: () => T, deps?: any[]): T {
   let init = false
   const data = getHookData<MemoData<T>>(() => {
     init = true
@@ -280,12 +281,12 @@ function pushEffectQueue(fn: VoidFunction) {
 }
 
 type EffectData = {
-  deps: any[]
+  deps?: any[]
   cleanup?: VoidFunction
   run: (fn: () => void | undefined | VoidFunction) => void
 }
 
-export function useEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
+export function useEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
   let init = false
   const data = getHookData<EffectData>(hooksData => {
     init = true
@@ -308,7 +309,7 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps: a
   }
 }
 
-export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps: any[]): void {
+export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
   let init = false
   const data = getHookData<EffectData>(hooksData => {
     init = true

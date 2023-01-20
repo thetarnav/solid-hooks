@@ -34,7 +34,7 @@ const App: Component = () => {
 
 ### Complete react counter
 
-https://playground.solidjs.com/anonymous/0fbea53c-cdb3-48c6-acbf-22cfb83b62c7
+https://playground.solidjs.com/anonymous/b3c45398-92eb-479f-b9c8-d63afabd76fc
 
 ```ts
 const count = createMemo(() => {
@@ -47,7 +47,7 @@ const count = createMemo(() => {
 
   useEffect(() => {
     savedCallback.current = callback
-  }, [{}])
+  })
 
   useEffect(() => {
     function tick() {
