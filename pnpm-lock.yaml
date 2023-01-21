@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@solid-primitives/keyed': ^1.1.5
   '@types/node': ^18.11.18
   '@typescript-eslint/eslint-plugin': ^5.48.1
   '@typescript-eslint/parser': ^5.48.1
@@ -22,6 +23,7 @@ dependencies:
   solid-js: 1.6.9
 
 devDependencies:
+  '@solid-primitives/keyed': 1.1.5_solid-js@1.6.9
   '@types/node': 18.11.18
   '@typescript-eslint/eslint-plugin': 5.48.1_3jon24igvnqaqexgwtxk6nkpse
   '@typescript-eslint/parser': 5.48.1_iukboom6ndih5an6iafl45j2fe
@@ -2008,6 +2010,14 @@ packages:
       '@solid-primitives/event-listener': 2.2.4_solid-js@1.6.9
       '@solid-primitives/rootless': 1.2.1_solid-js@1.6.9
       '@solid-primitives/utils': 4.0.0_solid-js@1.6.9
+      solid-js: 1.6.9
+    dev: true
+
+  /@solid-primitives/keyed/1.1.5_solid-js@1.6.9:
+    resolution: {integrity: sha512-vLa7exYYOwf0t25e/Qa17NtEMB3wxkwvNkl1/zvysNVf3E+upZMw2QpY4uE6o0vwr9cLMno1lL+kQ3891kXlOQ==}
+    peerDependencies:
+      solid-js: ^1.6.0
+    dependencies:
       solid-js: 1.6.9
     dev: true
 

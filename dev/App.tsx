@@ -1,40 +1,7 @@
 import { Component, createMemo, createSignal, untrack } from 'solid-js'
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from '../src'
-
-const Counter = () => {
-  const count = createMemo(() => {
-    const n = useRef(0)
-    console.log('n', n.current++)
-
-    const [count, setCount] = useState(0)
-    console.log('-', count)
-    const savedCallback = useRef<VoidFunction>()
-
-    function callback() {
-      console.log(n.current, 'update', count + 1)
-      setCount(count + 1)
-    }
-
-    useEffect(() => {
-      console.log(n.current, 'effect 1', count)
-      savedCallback.current = callback
-    })
-
-    useEffect(() => {
-      console.log('2')
-      function tick() {
-        savedCallback.current!()
-      }
-
-      let id = setInterval(tick, 1000)
-      return () => clearInterval(id)
-    }, [])
-
-    return count
-  })
-
-  return <h1>Count {count()}</h1>
-}
+import { Counter } from './Counter'
+import TaskApp from './Tasks'
 
 const App: Component = () => {
   const [count, setCount] = createSignal(0)
@@ -65,7 +32,7 @@ const App: Component = () => {
     const multiplierValue = multiplier()
 
     const [count, setCount] = untrack(() => useState(() => 0))
-    console.log('count', count)
+    // console.log('count', count)
     const double = useMemo(() => count * 2, [count])
 
     const increment = useCallback(() => {
@@ -73,16 +40,16 @@ const App: Component = () => {
     }, [multiplierValue])
 
     useEffect(() => {
-      console.log('effect', count, el.current?.innerText)
+      // console.log('effect', count, el.current?.innerText)
       return () => {
-        console.log("cleanup 'effect'")
+        // console.log("cleanup 'effect'")
       }
     }, [count])
 
     useLayoutEffect(() => {
-      console.log('layout effect', count, el.current?.innerText)
+      // console.log('layout effect', count, el.current?.innerText)
       return () => {
-        console.log('cleanup layout effect')
+        // console.log('cleanup layout effect')
       }
     }, [count])
 
@@ -100,6 +67,8 @@ const App: Component = () => {
 
   return (
     <div class="p-24 box-border w-full min-h-screen flex flex-col justify-center items-center space-y-4 bg-gray-800 text-white">
+      <Counter />
+
       <div class="wrapper-v">
         <h4>{'Counter component'}</h4>
         <p class="caption">useRef</p>
@@ -124,8 +93,9 @@ const App: Component = () => {
         >
           C: {stateMemo().count} D: {stateMemo().double}
         </button>
-        <Counter />
       </div>
+
+      <TaskApp />
     </div>
   )
 }

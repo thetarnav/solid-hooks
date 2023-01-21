@@ -17,7 +17,7 @@ Hooks to implement:
 - [x] useMemo
 - [x] useEffect
 - [x] useLayoutEffect
-- [ ] useReducer
+- [x] useReducer
 - [ ] useImperativeHandle
 - [ ] useDeferredValue
 - [ ] useSyncExternalStore
@@ -260,6 +260,50 @@ export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
   })
 
   return [stateData.value, stateData.setter]
+}
+
+export type Dispatch<A> = (value: A) => void
+
+export type DispatchWithoutAction = () => void
+
+export type Reducer<S, A> = (prevState: S, action: A) => S
+
+export type ReducerWithoutAction<S> = (prevState: S) => S
+
+export type ReducerState<R extends Reducer<any, any>> = R extends Reducer<infer S, any> ? S : never
+export type ReducerAction<R extends Reducer<any, any>> = R extends Reducer<any, infer A> ? A : never
+
+export type ReducerStateWithoutAction<R extends ReducerWithoutAction<any>> =
+  R extends ReducerWithoutAction<infer S> ? S : never
+
+export function useReducer<R extends ReducerWithoutAction<any>, I>(
+  reducer: R,
+  initializerArg: I,
+  initializer: (arg: I) => ReducerStateWithoutAction<R>,
+): [ReducerStateWithoutAction<R>, DispatchWithoutAction]
+export function useReducer<R extends ReducerWithoutAction<any>>(
+  reducer: R,
+  initializerArg: ReducerStateWithoutAction<R>,
+  initializer?: undefined,
+): [ReducerStateWithoutAction<R>, DispatchWithoutAction]
+export function useReducer<R extends Reducer<any, any>, I>(
+  reducer: R,
+  initializerArg: I & ReducerState<R>,
+  initializer: (arg: I & ReducerState<R>) => ReducerState<R>,
+): [ReducerState<R>, Dispatch<ReducerAction<R>>]
+export function useReducer<R extends Reducer<any, any>, I>(
+  reducer: R,
+  initializerArg: I,
+  initializer: (arg: I) => ReducerState<R>,
+): [ReducerState<R>, Dispatch<ReducerAction<R>>]
+export function useReducer<R extends Reducer<any, any>>(
+  reducer: R,
+  initialState: ReducerState<R>,
+  initializer?: undefined,
+): [ReducerState<R>, Dispatch<ReducerAction<R>>]
+export function useReducer(reducer: Reducer<any, any>, initialState: any, initializer?: any) {
+  const [state, setState] = useState(initializer ? initializer(initialState) : initialState)
+  return [state, (action: any) => setState((prevState: any) => reducer(prevState, action))]
 }
 
 const EffectQueue: VoidFunction[] = []

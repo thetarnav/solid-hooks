@@ -63,3 +63,78 @@ const count = createMemo(() => {
 
 return <h1>Count {count()}</h1>
 ```
+
+### Tasks with useReducer
+
+https://github.com/thetarnav/solid-hooks/blob/main/dev/Tasks.tsx
+
+```ts
+export default function TaskApp() {
+  // reducer handler can be defined in the component
+  // because it doesn't rerender :)
+  const tasksReducer: Reducer<
+    readonly Task[],
+    | { type: 'added'; id: number; text: string }
+    | { type: 'changed'; task: Task }
+    | { type: 'deleted'; id: number }
+  > = (tasks, action) => {
+    switch (action.type) {
+      case 'added':
+        return [
+          ...tasks,
+          {
+            id: action.id,
+            text: action.text,
+            done: false,
+          },
+        ]
+
+      case 'changed':
+        return tasks.map(t => {
+          if (t.id === action.task.id) {
+            return action.task
+          } else {
+            return t
+          }
+        })
+
+      case 'deleted':
+        return tasks.filter(t => t.id !== action.id)
+    }
+  }
+
+  const initialTasks = [
+    { id: 0, text: 'Visit Kafka Museum', done: true },
+    { id: 1, text: 'Watch a puppet show', done: false },
+    { id: 2, text: 'Lennon Wall pic', done: false },
+  ] as const satisfies readonly Task[]
+
+  const state = createMemo(() => {
+    const [tasks, dispatch] = useReducer(tasksReducer, initialTasks)
+    return { tasks, dispatch }
+  })
+
+  // top-level let is fine
+  let nextId = 3
+
+  return (
+    <>
+      <h1>Prague itinerary</h1>
+      <AddTask
+        onAddTask={text =>
+          state().dispatch({
+            type: 'added',
+            id: nextId++,
+            text: text,
+          })
+        }
+      />
+      <TaskList
+        tasks={state().tasks}
+        onChangeTask={task => state().dispatch({ type: 'changed', task: task })}
+        onDeleteTask={id => state().dispatch({ type: 'deleted', id })}
+      />
+    </>
+  )
+}
+```
