@@ -1,3 +1,30 @@
+/*
+
+Don't do this at home, kids.
+
+This is a proof of concept of how to implement hooks in Solid.
+
+It's not meant to be used in production, but rather to show how it could be done.
+
+It's not even complete, it's just a few hooks to show how it could work.
+
+Hooks to implement:
+- [x] useId
+- [x] useRef
+- [x] useCallback
+- [x] useState
+  - [x] add only if listener is present
+- [x] useMemo
+- [x] useEffect
+- [x] useLayoutEffect
+- [x] useReducer
+- [ ] useImperativeHandle
+- [ ] useDeferredValue
+- [ ] useSyncExternalStore
+- [ ] useEvent
+
+*/
+
 import {
   batch,
   createEffect,
@@ -20,7 +47,35 @@ class HooksData {
 
   trigger: Trigger | null = null
 
-  constructor(public owner: Computation) {}
+  constructor(public owner: Computation) {
+    if (process.env.DEV) {
+      if (
+        // component
+        'props' in owner ||
+        'componentName' in owner ||
+        // solid-refresh memo
+        ('value' in owner &&
+          'comparator' in owner &&
+          owner.pure === true &&
+          owner.owner &&
+          'props' in owner.owner &&
+          owner.owner.componentName &&
+          owner.owner.componentName.startsWith('_Hot$$'))
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "Solid Hooks shouldn't be used in components. Components do not rerender, but computations do — wrap hooks with createMemo or createEffect.",
+        )
+      }
+      // root
+      else if (!('fn' in owner)) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "Solid Hooks shouldn't be used in createRoot. Roots do not rerender, but computations do — wrap hooks with createMemo or createEffect.",
+        )
+      }
+    }
+  }
 
   cleanup() {
     this.#index = 0
