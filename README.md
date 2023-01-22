@@ -1,4 +1,12 @@
+<p>
+  <img width="100%" src="https://assets.solidjs.com/banner?type=React%20Hooks&background=tiles&project=%20" alt="Solid React Hooks">
+</p>
+
 # solid-react-hooks
+
+[![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
+[![npm](https://img.shields.io/npm/v/solid-react-hooks?style=for-the-badge)](https://www.npmjs.com/package/solid-react-hooks)
+[![downloads](https://img.shields.io/npm/dw/solid-react-hooks?color=blue&style=for-the-badge)](https://www.npmjs.com/package/solid-react-hooks)
 
 A library we don't deserve, but also never wanted.
 
