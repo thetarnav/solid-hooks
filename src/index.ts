@@ -1,219 +1,70 @@
-/*
-
-Don't do this at home, kids.
-
-This is a proof of concept of how to implement hooks in Solid.
-
-It's not meant to be used in production, but rather to show how it could be done.
-
-It's not even complete, it's just a few hooks to show how it could work.
-
-Hooks to implement:
-- [x] useId
-- [x] useRef
-- [x] useCallback
-- [x] useState
-  - [ ] add only if listener is present
-- [x] useMemo
-- [x] useEffect
-- [x] useLayoutEffect
-- [x] useReducer
-- [ ] useImperativeHandle
-- [ ] useDeferredValue
-- [ ] useSyncExternalStore
-- [ ] useEvent
-
-*/
-
 import {
   batch,
-  createComputed,
   createEffect,
   createRoot,
   createSignal,
+  getListener,
   getOwner,
   onCleanup,
   runWithOwner,
 } from 'solid-js'
-import { Computation, SignalState } from 'solid-js/types/reactive/signal'
+import { Computation } from './solid-types'
 
-declare module 'solid-js/types/reactive/signal' {
-  interface Owner {
-    hooksData?: HooksData
-  }
-}
+const HooksDataMap = new WeakMap<Computation, HooksData>()
 
-type HooksData = {
-  owner: Computation<unknown>
-  trigger: {
-    updated: boolean
-    trigger: VoidFunction
-    signal: SignalState<unknown>
-  }
-  index: number
-  data: (RefData | StateData<any> | IdData | CallbackData<any> | MemoData<any> | EffectData)[]
-  onCleanup: VoidFunction | undefined
-  onDispose: VoidFunction[]
-}
+class HooksData {
+  init = true
 
-type RefData = { current: any }
+  #index = 0
+  #list: object[] = []
 
-function getHookData<T extends HooksData['data'][number]>(factory: (hooksData: HooksData) => T): T {
-  const owner = getOwner() as Computation<unknown>
-  if (!owner) {
-    throw new Error(process.env.DEV ? 'hooks can only be used inside a computation.' : '')
+  trigger: Trigger | null = null
+
+  constructor(public owner: Computation) {}
+
+  cleanup() {
+    this.#index = 0
+    this.init = false
+    this.trigger && this.trigger.reset()
   }
 
-  const hooksData =
-    owner.hooksData ??
-    (owner.hooksData = (() => {
-      let signal!: SignalState<unknown>
-      let trigger!: VoidFunction
-
-      createRoot(dispose => {
-        const [trackTrigger, _trigger] = createSignal(undefined, { equals: false })
-        trigger = _trigger
-        let init = true
-        createComputed(() => {
-          if (!init) return
-          init = false
-          trackTrigger()
-          const cOwner = getOwner() as Computation<unknown>
-          signal = cOwner.sources![0]!
-          cOwner.sources = cOwner.sourceSlots = signal.observerSlots = signal.observers = null
-          dispose()
-        })
-      })
-
-      // Cleanups returned from thew effect and layoutEffect are called when the component is unmounted
-      const onDisposeList: VoidFunction[] = []
-      const parent = owner.owner
-      if (parent) {
-        const onDispose = () => {
-          for (const dispose of onDisposeList) dispose()
-        }
-        if (parent.cleanups) parent.cleanups.push(onDispose)
-        else parent.cleanups = [onDispose]
-      }
-
-      return {
-        owner,
-        index: 0,
-        data: [],
-        onCleanup: undefined,
-        trigger: { signal, trigger, updated: false },
-        onDispose: onDisposeList,
-      }
-    })())
-
-  if (!hooksData.onCleanup) {
-    onCleanup(
-      (hooksData.onCleanup = () => {
-        hooksData.index = 0
-        hooksData.onCleanup = undefined
-      }),
-    )
-
-    const signal = hooksData.trigger.signal
-    // force subscribe owner to trigger signal
-    if (owner.sources) {
-      owner.sources.push(signal)
-      owner.sourceSlots!.push(0)
-    } else {
-      owner.sources = [signal]
-      owner.sourceSlots = [0]
+  next<T extends object>(factory: (hooksData: HooksData) => T): T {
+    if (this.#index === 0) {
+      onCleanup(this.cleanup.bind(this))
     }
-    signal.observerSlots = [0]
-    signal.observers = [owner]
+
+    if (this.init) {
+      const data = factory(this)
+      this.#index = this.#list.push(data)
+      return data
+    }
+
+    const data = this.#list[this.#index++]
+
+    if (!data) {
+      throw new Error(
+        process.env.DEV ? 'Hooks can only be called in the same order in every update.' : '',
+      )
+    }
+
+    return data as T
+  }
+}
+
+function useHookData<T extends object>(factory: (hooksData: HooksData) => T): T {
+  const owner = getOwner() as Computation
+  if (!owner) {
+    throw new Error(
+      process.env.DEV ? 'Hooks can only be used synchronously inside a computation.' : '',
+    )
   }
 
-  let hookData: T
+  let data = HooksDataMap.get(owner)
+  if (!data) HooksDataMap.set(owner, (data = new HooksData(owner)))
 
-  // init
-  if (hooksData.index >= hooksData.data.length) hooksData.data.push((hookData = factory(hooksData)))
-  else hookData = hooksData.data[hooksData.index]! as T
-
-  hooksData.index++
-
-  return hookData
+  return data.next(factory)
 }
 
-function compareDeps(prevDeps?: any[], deps?: any[]): boolean {
-  if (!prevDeps) return false
-  if (prevDeps.length !== deps!.length) {
-    // eslint-disable-next-line no-console
-    process.env.DEV && console.warn('deps length changed')
-    return false
-  }
-  for (let i = 0; i < deps!.length; i++) {
-    if (!Object.is(prevDeps[i], deps![i])) return false
-  }
-  return true
-}
-
-type IdData = string
-
-const getNewId = () => Math.random().toString(36).substring(2, 9)
-
-export function useId(): string {
-  return getHookData<IdData>(getNewId)
-}
-
-export interface MutableRefObject<T> {
-  current: T
-}
-export interface RefObject<T> {
-  readonly current: T | null
-}
-
-export function useRef<T>(initialValue: T): MutableRefObject<T>
-export function useRef<T>(initialValue: T | null): RefObject<T>
-export function useRef<T = undefined>(): MutableRefObject<T | undefined>
-export function useRef<T>(initialValue?: T): MutableRefObject<T> {
-  return getHookData<RefData>(() => ({ current: initialValue }))
-}
-
-type CallbackData<T extends (...args: any[]) => any> = {
-  callback: T
-  deps?: any[]
-}
-
-export function useCallback<T extends (...args: any[]) => any>(fn: T, deps?: any[]): T {
-  let init = false
-  const data = getHookData<CallbackData<T>>(() => {
-    init = true
-    return { callback: fn, deps }
-  })
-
-  if (!init && !compareDeps(data.deps, deps)) {
-    data.callback = fn
-    data.deps = deps
-  }
-
-  return data.callback
-}
-
-type MemoData<T> = {
-  value: T
-  deps?: any[]
-}
-
-export function useMemo<T>(calculateValue: () => T, deps?: any[]): T {
-  let init = false
-  const data = getHookData<MemoData<T>>(() => {
-    init = true
-    return { value: calculateValue(), deps }
-  })
-
-  if (!init && !compareDeps(data.deps, deps)) {
-    data.value = calculateValue()
-    data.deps = deps
-  }
-
-  return data.value
-}
-
-// ? make it into a set?
 const TriggerQueue: VoidFunction[] = []
 
 function runTriggerQueue() {
@@ -226,48 +77,155 @@ function runTriggerQueue() {
   }
 }
 
-export type StateSetter<T> = (value: T | ((prev: T) => T)) => void
+class Trigger {
+  #tracked = false
+  #track: VoidFunction
 
-type StateData<T> = {
-  value: T
-  setter: StateSetter<T>
+  #triggered = false
+  #trigger: VoidFunction
+
+  constructor() {
+    const [track, trigger] = createSignal(void 0, { equals: false })
+    this.#track = track
+    this.#trigger = trigger
+  }
+
+  reset() {
+    this.#tracked = false
+  }
+
+  listen() {
+    if (this.#tracked) return
+
+    if (!getListener()) {
+      throw new Error(
+        process.env.DEV ? 'State hooks can only be used synchronously under tracking context.' : '',
+      )
+    }
+
+    this.#track()
+    this.#tracked = true
+  }
+
+  trigger(fn: VoidFunction) {
+    if (this.#triggered) {
+      TriggerQueue.push(fn)
+    } else {
+      this.#triggered = true
+      runTriggerQueue()
+      TriggerQueue.push(() => {
+        this.#trigger()
+        this.#triggered = false
+      })
+      fn()
+    }
+  }
 }
+
+function useTrigger(hooksData: HooksData): Trigger {
+  return hooksData.trigger || (hooksData.trigger = new Trigger())
+}
+
+function onOwnerDispose(owner: Computation, fn: VoidFunction) {
+  const parent = owner.owner
+  if (parent) {
+    if (parent.cleanups) parent.cleanups.push(fn)
+    else parent.cleanups = [fn]
+  }
+}
+
+function compareDeps(prevDeps?: any[], deps?: any[]): boolean {
+  if (!prevDeps) return true
+  if (prevDeps.length !== deps!.length) {
+    // eslint-disable-next-line no-console
+    process.env.DEV && console.warn('deps length changed')
+    return true
+  }
+  for (let i = 0; i < deps!.length; i++) {
+    if (!Object.is(prevDeps[i], deps![i])) return true
+  }
+  return false
+}
+
+function useDeps(
+  data: { readonly hooksData: HooksData; deps: any[] | undefined },
+  deps: any[] | undefined,
+): boolean {
+  if (data.hooksData.init || compareDeps(data.deps, deps)) {
+    data.deps = deps
+    return true
+  }
+  return false
+}
+
+const getNewId = () => Math.random().toString(36).substring(2, 9)
+
+export function useId(): string {
+  return useHookData<{ id: string }>(() => ({ id: getNewId() })).id
+}
+
+export interface MutableRefObject<T> {
+  current: T
+}
+export interface RefObject<T> {
+  readonly current: T | null
+}
+
+export function useRef<T>(initialValue: T): MutableRefObject<T>
+export function useRef<T>(initialValue: T | null): RefObject<T>
+export function useRef<T = undefined>(): MutableRefObject<T | undefined>
+export function useRef<T>(initialValue?: T): MutableRefObject<T | undefined> {
+  return useHookData<{ current: T | undefined }>(() => ({ current: initialValue }))
+}
+
+export function useCallback<T extends (...args: any[]) => any>(fn: T, deps?: any[]): T {
+  const data = useHookData(hooksData => ({ callback: fn, hooksData, deps }))
+
+  if (useDeps(data, deps)) {
+    data.callback = fn
+  }
+
+  return data.callback
+}
+
+export function useMemo<T>(calculateValue: () => T, deps?: any[]): T {
+  const data = useHookData(hooksData => ({ value: calculateValue(), hooksData, deps }))
+
+  if (useDeps(data, deps)) {
+    data.value = calculateValue()
+  }
+
+  return data.value
+}
+
+export type StateSetter<T> = (value: T | ((prev: T) => T)) => void
 
 const getNextValue = <T>(newValue: T | ((prev: T) => T), prevValue: T) =>
   typeof newValue === 'function' ? (newValue as (prev: T) => T)(prevValue) : newValue
 
 export function useState<T>(initValue: T | (() => T)): [T, StateSetter<T>] {
-  const stateData = getHookData<StateData<T>>(hooksData => {
-    const obj: StateData<T> = {
+  const stateData = useHookData(hooksData => {
+    const trigger = useTrigger(hooksData)
+
+    const data = {
       value: typeof initValue === 'function' ? (initValue as () => T)() : initValue,
       setter(newValue) {
-        if (!hooksData.trigger.updated) {
-          obj.value = getNextValue(newValue, obj.value)
-          hooksData.trigger.updated = true
-          runTriggerQueue()
-          TriggerQueue.push(() => {
-            hooksData.trigger.trigger()
-            hooksData.trigger.updated = false
-          })
-        } else {
-          TriggerQueue.push(() => {
-            obj.value = getNextValue(newValue, obj.value)
-          })
-        }
+        trigger.trigger(() => (data.value = getNextValue(newValue, data.value)))
       },
-    }
-    return obj
+      trigger,
+    } satisfies { setter: StateSetter<T> } & { [k: string]: any }
+    return data
   })
+
+  stateData.trigger.listen()
 
   return [stateData.value, stateData.setter]
 }
 
 export type Dispatch<A> = (value: A) => void
-
 export type DispatchWithoutAction = () => void
 
 export type Reducer<S, A> = (prevState: S, action: A) => S
-
 export type ReducerWithoutAction<S> = (prevState: S) => S
 
 export type ReducerState<R extends Reducer<any, any>> = R extends Reducer<infer S, any> ? S : never
@@ -306,6 +264,26 @@ export function useReducer(reducer: Reducer<any, any>, initialState: any, initia
   return [state, (action: any) => setState((prevState: any) => reducer(prevState, action))]
 }
 
+export function useEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
+  const data = useHookData(hooksData => {
+    const owner = hooksData.owner
+    onOwnerDispose(owner, () => data.cleanup && data.cleanup())
+    return {
+      deps,
+      hooksData,
+      run(fn: () => void | undefined | VoidFunction) {
+        runWithOwner(owner, () => (data.cleanup = fn()))
+      },
+      cleanup: null as VoidFunction | null | undefined | void,
+    }
+  })
+
+  if (useDeps(data, deps)) {
+    runTriggerQueue()
+    TriggerQueue.push(() => data.run(effect))
+  }
+}
+
 const EffectQueue: VoidFunction[] = []
 
 const [trackEffectQueueSignal, triggerEffectQueue] = createSignal(
@@ -334,53 +312,21 @@ function pushEffectQueue(fn: VoidFunction) {
   EffectQueue.push(fn) === 1 && triggerEffectQueue()
 }
 
-type EffectData = {
-  deps?: any[]
-  cleanup?: VoidFunction
-  run: (fn: () => void | undefined | VoidFunction) => void
-}
-
-export function useEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
-  let init = false
-  const data = getHookData<EffectData>(hooksData => {
-    init = true
-    return {
-      deps,
-      run(fn) {
-        runWithOwner(hooksData.owner, () => {
-          data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
-          const cleanup = fn()
-          if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
-        })
-      },
-    }
-  })
-
-  if (init || !compareDeps(data.deps, deps)) {
-    data.deps = deps
-    runTriggerQueue()
-    TriggerQueue.push(() => data.run(effect))
-  }
-}
-
 export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
-  let init = false
-  const data = getHookData<EffectData>(hooksData => {
-    init = true
+  const data = useHookData(hooksData => {
+    const owner = hooksData.owner
+    onOwnerDispose(owner, () => data.cleanup && data.cleanup())
     return {
       deps,
-      run(fn) {
-        runWithOwner(hooksData.owner, () => {
-          data.cleanup && hooksData.onDispose.splice(hooksData.onDispose.indexOf(data.cleanup), 1)
-          const cleanup = fn()
-          if (cleanup) hooksData.onDispose.push((data.cleanup = cleanup))
-        })
+      hooksData,
+      run(fn: () => void | undefined | VoidFunction) {
+        runWithOwner(owner, () => (data.cleanup = fn()))
       },
+      cleanup: null as VoidFunction | null | undefined | void,
     }
   })
 
-  if (init || !compareDeps(data.deps, deps)) {
-    data.deps = deps
+  if (useDeps(data, deps)) {
     pushEffectQueue(() => data.run(effect))
   }
 }

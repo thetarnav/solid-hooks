@@ -1,5 +1,5 @@
-import { Component, createMemo, createSignal, untrack } from 'solid-js'
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from '../src'
+import { Component, createMemo, createSignal } from 'solid-js'
+import { useCallback, useId, useMemo, useRef, useState } from '../src'
 import { Counter } from './Counter'
 import TaskApp from './Tasks'
 
@@ -31,7 +31,7 @@ const App: Component = () => {
 
     const multiplierValue = multiplier()
 
-    const [count, setCount] = untrack(() => useState(() => 0))
+    const [count, setCount] = useState(() => 0)
     // console.log('count', count)
     const double = useMemo(() => count * 2, [count])
 
@@ -39,19 +39,19 @@ const App: Component = () => {
       setCount(p => p + 1 * multiplierValue)
     }, [multiplierValue])
 
-    useEffect(() => {
-      // console.log('effect', count, el.current?.innerText)
-      return () => {
-        // console.log("cleanup 'effect'")
-      }
-    }, [count])
+    // useEffect(() => {
+    //   console.log('effect', count, el.current?.innerText)
+    //   return () => {
+    //     console.log("cleanup 'effect'")
+    //   }
+    // }, [count])
 
-    useLayoutEffect(() => {
-      // console.log('layout effect', count, el.current?.innerText)
-      return () => {
-        // console.log('cleanup layout effect')
-      }
-    }, [count])
+    // useLayoutEffect(() => {
+    //   console.log('layout effect', count, el.current?.innerText)
+    //   return () => {
+    //     console.log('cleanup layout effect')
+    //   }
+    // }, [count])
 
     return { count, increment, double, el }
   })
