@@ -339,14 +339,14 @@ export function useEffect(effect: () => void | undefined | VoidFunction, deps?: 
   }
 }
 
-const EffectQueue: VoidFunction[] = []
+const pushEffectQueue = /*#__PURE__*/ createRoot(() => {
+  const EffectQueue: VoidFunction[] = []
 
-const [trackEffectQueueSignal, triggerEffectQueue] = createSignal(
-  void 0,
-  process.env.DEV ? { name: 'effectQueue', equals: false } : { equals: false },
-)
+  const [trackEffectQueueSignal, triggerEffectQueue] = createSignal(
+    void 0,
+    process.env.DEV ? { name: 'effectQueue', equals: false } : { equals: false },
+  )
 
-createRoot(() => {
   let init = true
   createEffect(
     () => {
@@ -361,11 +361,11 @@ createRoot(() => {
     void 0,
     process.env.DEV ? { name: 'effectQueue' } : void 0,
   )
-})
 
-function pushEffectQueue(fn: VoidFunction) {
-  EffectQueue.push(fn) === 1 && triggerEffectQueue()
-}
+  return (fn: VoidFunction) => {
+    EffectQueue.push(fn) === 1 && triggerEffectQueue()
+  }
+})
 
 export function useLayoutEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
   const data = useHookData(hooksData => {
