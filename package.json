@@ -88,7 +88,12 @@
   "scripts": {
     "dev": "vite serve dev",
     "build": "tsup",
-    "prepublish": "pnpm build"
+    "prepublish": "pnpm build",
+    "test": "vitest",
+    "format": "prettier -w {dev,src,test}/**/*.{js,ts,json,css,tsx,jsx} --ignore-path .gitignore",
+    "lint": "eslint --ignore-path .gitignore --max-warnings 0 src/**/*.{js,ts,tsx,jsx}",
+    "typecheck": "tsc --noEmit",
+    "update-deps": "pnpm up -Li"
   },
   "devDependencies": {
     "@solid-primitives/keyed": "^1.1.5",
@@ -106,13 +111,11 @@
     "unocss": "^0.48.4",
     "vite": "^4.0.4",
     "vite-plugin-solid": "^2.5.0",
-    "vitest": "^0.27.1"
-  },
-  "dependencies": {
+    "vitest": "^0.27.1",
     "solid-js": "^1.6.9"
   },
-  "packageManager": "pnpm@7.22.0",
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "peerDependencies": {
+    "solid-js": "^1.6.0"
+  },
+  "packageManager": "pnpm@7.22.0"
 }

@@ -19,9 +19,6 @@ specifiers:
   vite-plugin-solid: ^2.5.0
   vitest: ^0.27.1
 
-dependencies:
-  solid-js: 1.6.9
-
 devDependencies:
   '@solid-primitives/keyed': 1.1.5_solid-js@1.6.9
   '@types/node': 18.11.18
@@ -32,6 +29,7 @@ devDependencies:
   prettier: 2.8.3
   prettier-plugin-organize-imports: 3.2.2_uhxzhaxu465qzax2tftpee5s7i
   solid-devtools: 0.24.7_5u5qyhijp2ewdgjt5mu45hdgyq
+  solid-js: 1.6.9
   tsup: 6.5.0_typescript@4.9.4
   tsup-preset-solid: 0.1.3_heeaaaidrly65iqusvmbueopuy
   typescript: 4.9.4
@@ -2830,6 +2828,7 @@ packages:
 
   /csstype/3.1.1:
     resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+    dev: true
 
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -4716,6 +4715,7 @@ packages:
     resolution: {integrity: sha512-kV3fMmm+1C2J95c8eDOPKGfZHnuAkHUBLG4hX1Xu08bXeAIPqmxuz/QdH3B8SIdTp3EatBVIyA6RCes3hrGzpg==}
     dependencies:
       csstype: 3.1.1
+    dev: true
 
   /solid-refresh/0.4.2_solid-js@1.6.9:
     resolution: {integrity: sha512-6g1HsgQkY0X0ZmsaydNgHwRaQIhH3bAbagZiYwWnGO7mqli50ehlwQUN18RZ2MH3fTIs9Y1bankZapVhMVuijg==}

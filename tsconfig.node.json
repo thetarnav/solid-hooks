@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["node"],
-    "lib": ["ESNext"],
+    "lib": ["ESNext"]
   },
-  "include": ["./tsup.config.ts"]
+  "include": ["./tsup.config.ts", "./vitest.config.ts"]
 }
