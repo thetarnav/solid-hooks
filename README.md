@@ -22,7 +22,7 @@ A kitchen sink of examples: https://github.com/thetarnav/solid-hooks/blob/main/d
 
 https://playground.solidjs.com/anonymous/f33901ee-0f0a-4ee4-8781-595109541805
 
-```ts
+```tsx
 const App: Component = () => {
   const count = createMemo(() => {
     const [count, setCount] = useState(0)
@@ -44,7 +44,7 @@ const App: Component = () => {
 
 https://playground.solidjs.com/anonymous/b3c45398-92eb-479f-b9c8-d63afabd76fc
 
-```ts
+```tsx
 const count = createMemo(() => {
   const [count, setCount] = useState(0)
   const savedCallback = useRef()
@@ -72,11 +72,40 @@ const count = createMemo(() => {
 return <h1>Count {count()}</h1>
 ```
 
+### useSyncExternalStore
+
+https://github.com/thetarnav/solid-hooks/blob/main/dev/Mouse.tsx
+
+```tsx
+const pos = createMemo(() => {
+  const { width, height } = useSyncExternalStore(
+    trigger => {
+      window.addEventListener('resize', trigger)
+      return () => window.removeEventListener('resize', trigger)
+    },
+    () => ({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }),
+  )
+
+  return { width, height }
+})
+
+return (
+  <div>
+    <p>
+      The current window size is ({width()}, {height()})
+    </p>
+  </div>
+)
+```
+
 ### Tasks with useReducer
 
 https://github.com/thetarnav/solid-hooks/blob/main/dev/Tasks.tsx
 
-```ts
+```tsx
 export default function TaskApp() {
   // reducer handler can be defined in the component
   // because it doesn't rerender :)
