@@ -7,6 +7,7 @@ export {
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
 } from './hooks'
 export type {
   Dispatch,

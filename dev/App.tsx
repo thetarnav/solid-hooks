@@ -1,6 +1,7 @@
 import { Component, createMemo, createSignal } from 'solid-js'
 import { useCallback, useId, useMemo, useRef, useState } from '../src'
 import { Counter } from './Counter'
+import { MousePosition } from './Mouse'
 import TaskApp from './Tasks'
 
 const App: Component = () => {
@@ -96,6 +97,10 @@ const App: Component = () => {
       </div>
 
       <TaskApp />
+
+      <div class="fixed top-4 left-4">
+        <MousePosition />
+      </div>
     </div>
   )
 }

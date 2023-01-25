@@ -22,6 +22,12 @@ export const useReducer: typeof API.useReducer = (
   initializer?: any,
 ) => useState(initializer ? initializer(initialState) : initialState) as any
 
+export const useSyncExternalStore: typeof API.useSyncExternalStore = (
+  subscribe,
+  getSnapshot,
+  getServerSnapshot,
+) => (getServerSnapshot ? getServerSnapshot() : getSnapshot())
+
 export const useEffect: typeof API.useEffect = () => {}
 
 export const useLayoutEffect: typeof API.useLayoutEffect = () => {}

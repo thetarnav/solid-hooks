@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@solid-primitives/destructure': ^0.1.5
   '@solid-primitives/keyed': ^1.1.5
   '@types/node': ^18.11.18
   '@typescript-eslint/eslint-plugin': ^5.48.1
@@ -22,6 +23,7 @@ specifiers:
   vitest: ^0.27.1
 
 devDependencies:
+  '@solid-primitives/destructure': 0.1.5_solid-js@1.6.9
   '@solid-primitives/keyed': 1.1.5_solid-js@1.6.9
   '@types/node': 18.11.18
   '@typescript-eslint/eslint-plugin': 5.48.2_caon6io6stgpr7lz2rtbhekxqy
@@ -1969,6 +1971,15 @@ packages:
 
   /@solid-primitives/cursor/0.0.103_solid-js@1.6.9:
     resolution: {integrity: sha512-bb5x5lCimBf7R2VqrrMVcP2y/aGTMjNj7fjvY+RvTAC3/WtG/odqeYwka4lCBV27pX9TiJCKtNS6mVTigdfLMA==}
+    peerDependencies:
+      solid-js: ^1.6.0
+    dependencies:
+      '@solid-primitives/utils': 4.0.1_solid-js@1.6.9
+      solid-js: 1.6.9
+    dev: true
+
+  /@solid-primitives/destructure/0.1.5_solid-js@1.6.9:
+    resolution: {integrity: sha512-CnwZsQ+HTqT63mvhZXfg+2ifL2D8t/NZSomAqhqFiK7+7vwGCah9ZT4KCFGX7PsfkAON1SYgUpCGnEsDv8C+rA==}
     peerDependencies:
       solid-js: ^1.6.0
     dependencies:

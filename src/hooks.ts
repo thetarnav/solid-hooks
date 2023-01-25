@@ -319,6 +319,29 @@ export function useReducer(reducer: Reducer<any, any>, initialState: any, initia
   return [state, (action: any) => setState((prevState: any) => reducer(prevState, action))]
 }
 
+export function useSyncExternalStore<Snapshot>(
+  subscribe: (onStoreChange: VoidFunction) => VoidFunction,
+  getSnapshot: () => Snapshot,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getServerSnapshot?: () => Snapshot,
+): Snapshot {
+  const data = useHookData(hooksData => {
+    const trigger = useTrigger(hooksData)
+    onOwnerDispose(
+      hooksData.owner,
+      subscribe(() => {
+        trigger.trigger(() => (data.snapshot = getSnapshot()))
+      }),
+    )
+    const obj = { trigger, snapshot: getSnapshot() }
+    return obj
+  })
+
+  data.trigger.listen()
+
+  return data.snapshot
+}
+
 export function useEffect(effect: () => void | undefined | VoidFunction, deps?: any[]): void {
   const data = useHookData(hooksData => {
     const owner = hooksData.owner
