@@ -38,24 +38,23 @@ A kitchen sink of examples: https://github.com/thetarnav/solid-hooks/blob/main/d
 
 ### Simple counter
 
-https://playground.solidjs.com/anonymous/f33901ee-0f0a-4ee4-8781-595109541805
+https://playground.solidjs.com/anonymous/5a220091-0b85-4abc-a4a7-7d73dfc0dd3e
 
 ```tsx
 const App: Component = () => {
   const count = createMemo(() => {
-    const [count, setCount] = useState(0)
+    const [count, setCount] = useState(0);
 
     useEffect(() => {
-      setInterval(() => {
-        setCount(p => ++p)
-      }, 1000)
-    }, [])
+      const id = setInterval(() => setCount((p) => ++p), 1000);
+      return () => clearInterval(id);
+    }, []);
 
-    return count
-  })
+    return count;
+  });
 
-  return <h1>Count {count()}</h1>
-}
+  return <h1>Count {count()}</h1>;
+};
 ```
 
 ### Complete react counter
