@@ -8,9 +8,27 @@
 [![npm](https://img.shields.io/npm/v/solid-react-hooks?style=for-the-badge)](https://www.npmjs.com/package/solid-react-hooks)
 [![downloads](https://img.shields.io/npm/dw/solid-react-hooks?color=blue&style=for-the-badge)](https://www.npmjs.com/package/solid-react-hooks)
 
+**React hooks API in SolidJS.**
+
 A library we don't deserve, but also never wanted.
 
-React hooks API in SolidJS.
+## Overview
+
+This library aims to provide a React Hooks API in SolidJS. It's a thin layer on top of SolidJS primitives, so it's not a magic bullet. It's a tool to help you migrate your React code to SolidJS. Or just have fun with combining two, what might seem like, incompatible systems together :)
+
+### Components don't rerender
+
+In SolidJS the components don't rerender. They are just functions that run once and return real DOM elements. Which mean that if you try to use a hook top-level inside a component, it will only run once and never again. This is why we need to wrap hooks in a `createMemo`/`createEffect` call, or any other computation, because those are the APIs that rerun when their dependencies change.
+
+Calling them outside of computations won't throw, but you'll see a friendly warning in the console.
+
+## Installation
+
+```bash
+pnpm add solid-react-hooks
+# or
+npm install solid-react-hooks
+```
 
 ## Examples:
 

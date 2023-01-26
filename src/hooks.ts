@@ -1,11 +1,8 @@
 /*
 
 Don't do this at home, kids.
-
-This is a proof of concept of how to implement hooks in Solid.
-
+This is a proof of concept of how to implement React-like hooks in Solid.
 It's not meant to be used in production, but rather to show how it could be done.
-
 It's not even complete, it's just a few hooks to show how it could work.
 
 Hooks to implement:
@@ -20,7 +17,7 @@ Hooks to implement:
 - [x] useReducer
 - [ ] useImperativeHandle
 - [ ] useDeferredValue
-- [ ] useSyncExternalStore
+- [x] useSyncExternalStore
 - [ ] useEvent
 
 */
