@@ -22,6 +22,8 @@ In SolidJS the components don't rerender. They are just functions that run once 
 
 Calling them outside of computations won't throw, but you'll see a friendly warning in the console.
 
+[**>> CODE DEMO <<**](https://codesandbox.io/p/sandbox/solid-primitives-event-bus-forked-5g4gm)
+
 ## Installation
 
 ```bash
@@ -36,30 +38,9 @@ npm install solid-react-hooks
 
 A kitchen sink of examples: https://github.com/thetarnav/solid-hooks/blob/main/dev/App.tsx
 
-### Simple counter
+### Counter
 
-https://playground.solidjs.com/anonymous/5a220091-0b85-4abc-a4a7-7d73dfc0dd3e
-
-```tsx
-const App: Component = () => {
-  const count = createMemo(() => {
-    const [count, setCount] = useState(0);
-
-    useEffect(() => {
-      const id = setInterval(() => setCount((p) => ++p), 1000);
-      return () => clearInterval(id);
-    }, []);
-
-    return count;
-  });
-
-  return <h1>Count {count()}</h1>;
-};
-```
-
-### Complete react counter
-
-https://playground.solidjs.com/anonymous/b3c45398-92eb-479f-b9c8-d63afabd76fc
+https://codesandbox.io/p/sandbox/solid-primitives-event-bus-forked-5g4gm
 
 ```tsx
 const count = createMemo(() => {
