@@ -67,6 +67,12 @@ const count = createMemo(() => {
   return count
 })
 
+createEffect(() => {
+  const prev = useRef<number>()
+  console.log('prev', prev.current, 'current', count())
+  prev.current = count()
+})
+
 return <h1>Count {count()}</h1>
 ```
 
